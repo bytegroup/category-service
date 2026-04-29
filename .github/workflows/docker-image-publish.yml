@@ -32,8 +32,8 @@ jobs:
           push: true
           # Senior Practice: Tag with both 'latest' and the short Git commit SHA
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_REGISTRY }}:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_REGISTRY }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.DOCKER_REGISTRY }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.DOCKER_REGISTRY }}:${{ github.sha }}
           # Enable caching to speed up builds
           cache-from: type=gha
           cache-to: type=gha,mode=max
