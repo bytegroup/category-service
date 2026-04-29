@@ -1,9 +1,11 @@
 name: Build and Push to Docker Hub
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
+  #push:
+  #  branches: [ "main" ]
+  #pull_request:
+  #  branches: [ "main" ]
+  merge:
     branches: [ "main" ]
 
 jobs:
