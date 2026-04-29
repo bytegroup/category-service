@@ -45,11 +45,10 @@ const CategorySchema = new Schema<ICategoryDocument, ICategoryModel>(
     versionKey: false,
     toJSON: {
       virtuals: true,
-      transform: (_doc, ret) => {
-        ret.id = ret._id.toString();
-        delete ret._id;
-        return ret;
-      },
+      transform: (_doc, ret: any) => {
+        const { _id, __v, ...rest } = ret;
+        return { id: _id.toString(), ...rest };
+      }
     },
   }
 );
