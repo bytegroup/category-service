@@ -6,6 +6,24 @@ import {requestLogger} from "@/middleware/requestLogger";
 import {logger} from "@/utils/logger";
 import {globalErrorHandler, notFoundHandler} from "@/middleware/errorHandler";
 import {expressMiddleware} from "@as-integrations/express5";
+import rateLimit from "express-rate-limit";
+import {createCategoryLoader} from "@/loaders/category.loader";
+
+const graphqlRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests, please try again after 15 minutes.',
+            statusCode: 429,
+        },
+    },
+    skip: (req) => req.method === 'GET',
+});
 
 export async function createCategoryService(apolloServer: ApolloServer): Promise<Application> {
     await apolloServer.start();
@@ -36,9 +54,11 @@ export async function createCategoryService(apolloServer: ApolloServer): Promise
 
     app.use(
         '/graphql',
+        graphqlRateLimiter,
         expressMiddleware(apolloServer, {
             context: async ({ req }) => ({
                 requestId: req.requestId,
+                categoryLoader: createCategoryLoader(),
             }),
         })
     );

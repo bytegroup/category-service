@@ -1,9 +1,57 @@
 import {logger} from "@/utils/logger";
 import {toGraphQLError} from "@/utils/errors";
 import {categoryService} from "@/services/category.service";
+import {ICategoryDocument} from "@/models/category.model";
+import {Types} from "mongoose";
+import {CategoryLoader} from "@/loaders/category.loader";
 
+export interface GraphQLContext {
+  requestId: string;
+  categoryLoader: CategoryLoader;
+}
+
+function toId(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (value instanceof Types.ObjectId) return value.toString();
+  // Already-populated subdocument — has _id or id
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    if (obj._id) return obj._id instanceof Types.ObjectId ? obj._id.toString() : String(obj._id);
+    if (obj.id) return String(obj.id);
+  }
+  return null;
+}
 
 export const categoryResolvers = {
+  Category: {
+    parent: async (
+      category: ICategoryDocument,
+      _: unknown,
+      { categoryLoader }: GraphQLContext
+    ) => {
+      if (!category.parent) return null;
+      const id = toId(category.parent);
+      if (!id) return null;
+      return categoryLoader.load(id);
+    },
+
+    ancestors: async (
+      category: ICategoryDocument,
+      _: unknown,
+      { categoryLoader }: GraphQLContext
+    ) => {
+      if (!category.ancestors?.length) return [];
+      const ids = category.ancestors
+        .map(toId)
+        .filter((id): id is string => id !== null);
+      if (!ids.length) return [];
+      const results = await categoryLoader.loadMany(ids);
+      // Filter out errors — DataLoader.loadMany returns Error objects on misses
+      return results.filter((r) => r !== null && !(r instanceof Error));
+    },
+  },
+
   Query: {
     category: async (_: unknown, { id }: { id: string }) => {
       try {
@@ -47,6 +95,18 @@ export const categoryResolvers = {
         return await categoryService.getChildren(parentId);
       } catch (err) {
         logger.error('Query.categoryChildren error', { parentId, error: (err as Error).message });
+        throw toGraphQLError(err);
+      }
+    },
+
+    deletedCategories: async (
+      _: unknown,
+      { pagination }: { pagination?: { page?: number; limit?: number } }
+    ) => {
+      try {
+        return await categoryService.getDeletedCategories(pagination);
+      } catch (err) {
+        logger.error('Query.deletedCategories error', { error: (err as Error).message });
         throw toGraphQLError(err);
       }
     },
@@ -97,10 +157,19 @@ export const categoryResolvers = {
 
     deleteCategory: async (_: unknown, { id }: { id: string }) => {
       try {
-        await categoryService.deleteCategory(id);
-        return { success: true, message: 'Category and all descendants deleted successfully' };
+        await categoryService.softDeleteCategory(id);
+        return { success: true, message: 'Category soft-deleted successfully. Data is retained and restorable.' };
       } catch (err) {
         logger.error('Mutation.deleteCategory error', { id, error: (err as Error).message });
+        throw toGraphQLError(err);
+      }
+    },
+
+    restoreCategory: async (_: unknown, { id }: { id: string }) => {
+      try {
+        return await categoryService.restoreCategory(id);
+      } catch (err) {
+        logger.error('Mutation.restoreCategory error', { id, error: (err as Error).message });
         throw toGraphQLError(err);
       }
     },
