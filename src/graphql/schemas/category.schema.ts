@@ -5,6 +5,8 @@ export const categoryTypeDefs = `#graphql
     parent: Category
     ancestors: [Category!]!
     isActive: Boolean!
+    isDeleted: Boolean!
+    deletedAt: String
     createdAt: String!
     updatedAt: String!
   }
@@ -50,6 +52,9 @@ export const categoryTypeDefs = `#graphql
 
     """Get direct children of a category"""
     categoryChildren(parentId: ID!): [Category!]!
+
+    """[NEW] Get soft-deleted categories (audit/restore purposes)"""
+    deletedCategories(pagination: PaginationInput): PaginatedCategories!
   }
 
   type Mutation {
@@ -65,7 +70,10 @@ export const categoryTypeDefs = `#graphql
     """Reactivate a previously deactivated category"""
     reactivateCategory(id: ID!): Category!
 
-    """Permanently delete a category and all its descendants"""
+    """[MODIFIED] Soft-delete a category and all its descendants (restorable)"""
     deleteCategory(id: ID!): DeleteResponse!
+
+    """[NEW] Restore a soft-deleted category"""
+    restoreCategory(id: ID!): Category!
   }
 `;
