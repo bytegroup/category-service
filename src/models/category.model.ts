@@ -6,6 +6,8 @@ export interface ICategoryDocument extends Document {
   parent: Types.ObjectId | null;
   ancestors: Types.ObjectId[];
   isActive: boolean;
+  isDeleted: boolean;      // [NEW] soft-delete flag
+  deletedAt: Date | null;  // [NEW] when it was soft-deleted
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,6 +41,16 @@ const CategorySchema = new Schema<ICategoryDocument, ICategoryModel>(
       default: true,
       index: true,
     },
+    // [NEW] soft-delete fields
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -56,7 +68,8 @@ const CategorySchema = new Schema<ICategoryDocument, ICategoryModel>(
 // Compound index for fast ancestor-based queries
 CategorySchema.index({ ancestors: 1 });
 CategorySchema.index({ parent: 1, isActive: 1 });
-CategorySchema.index({ name: 'text' }); // For text search
+CategorySchema.index({ isDeleted: 1, isActive: 1 }); // [NEW] combined status index
+CategorySchema.index({ name: 'text' });
 
 export const Category = mongoose.model<ICategoryDocument, ICategoryModel>(
   'Category',
