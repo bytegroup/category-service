@@ -6,7 +6,7 @@ import {fieldExtensionsEstimator, getComplexity, simpleEstimator} from "graphql-
 import depthLimit from 'graphql-depth-limit';
 
 const MAX_QUERY_DEPTH = 7;
-const MAX_QUERY_COMPLEXITY = 200;
+const MAX_QUERY_COMPLEXITY = 250;
 export interface GraphQLContext {
   requestId: string | undefined;
   categoryLoader: any; // Or your specific loader type
