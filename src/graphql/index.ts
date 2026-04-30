@@ -8,12 +8,12 @@ import depthLimit from 'graphql-depth-limit';
 const MAX_QUERY_DEPTH = 7;
 const MAX_QUERY_COMPLEXITY = 200;
 export interface GraphQLContext {
-  requestId: string;
+  requestId: string | undefined;
   categoryLoader: any; // Or your specific loader type
 }
 
 export function createApolloServer(): ApolloServer<GraphQLContext> {
-  const server = new ApolloServer({
+  const server = new ApolloServer<GraphQLContext>({
     typeDefs: categoryTypeDefs,
     resolvers: categoryResolvers,
 

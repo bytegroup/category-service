@@ -6,7 +6,7 @@ import {Types} from "mongoose";
 import {CategoryLoader} from "@/loaders/category.loader";
 
 export interface GraphQLContext {
-  requestId: string;
+  requestId: string | undefined;
   categoryLoader: CategoryLoader;
 }
 

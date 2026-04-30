@@ -8,6 +8,7 @@ import {globalErrorHandler, notFoundHandler} from "@/middleware/errorHandler";
 import {expressMiddleware} from "@as-integrations/express5";
 import rateLimit from "express-rate-limit";
 import {createCategoryLoader} from "@/loaders/category.loader";
+import {GraphQLContext} from "@/graphql/resolvers/category.resolver";
 
 const graphqlRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -25,7 +26,7 @@ const graphqlRateLimiter = rateLimit({
     skip: (req) => req.method === 'GET',
 });
 
-export async function createCategoryService(apolloServer: ApolloServer): Promise<Application> {
+export async function createCategoryService(apolloServer: ApolloServer<GraphQLContext>): Promise<Application> {
     await apolloServer.start();
 
     const app = express();
